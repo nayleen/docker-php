@@ -1,0 +1,3 @@
+services:
+  php:
+    image: ${REGISTRY:-ghcr.io/nayleen}/php-zts:${PHP_VERSION:-8.4}

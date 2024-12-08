@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+retryCount=0
+maxRetries=2
+
+until [ $retryCount -gt $maxRetries ]; do
+    set +e
+    (
+      apt update -qq &&
+      apt install -y --no-install-recommends "$@"
+    )
+    CODE=$?
+
+    set -e
+    if [ $CODE -eq 0 ]; then
+        break
+    fi
+
+    if [ $retryCount -eq $maxRetries ]; then
+        exit $CODE
+    fi
+
+    echo "apt failed, retrying"
+    retryCount=$(($retryCount + 1))
+done
+
+rm -r \
+    /var/cache/apt/archives \
+    /var/lib/apt/lists
