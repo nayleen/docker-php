@@ -1,0 +1,2 @@
+# allow "app" user to run /init.sh as root, without password
+app ALL=(ALL) NOPASSWD:SETENV: /init.sh

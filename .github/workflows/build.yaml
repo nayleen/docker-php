@@ -1,0 +1,83 @@
+name: Build Images
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      LOCAL_REGISTRY: localhost:5000
+      REMOTE_REGISTRY: ghcr.io/nayleen
+    permissions:
+      contents: read
+      packages: write
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    strategy:
+      matrix:
+        php:
+          - 8.1
+          - 8.2
+          - 8.3
+          - 8.4
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Export PHP Version to ENV
+        run: echo "PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Build Local Images
+        uses: docker/bake-action@v5
+        env:
+          REGISTRY: ${{ env.LOCAL_REGISTRY }}
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          source: .
+          load: true
+          push: true
+          set: |
+            php.cache-from=type=gha,scope=cache-php-${{ matrix.php }}
+
+      - name: Test Local Images
+        env:
+          REGISTRY: ${{ env.LOCAL_REGISTRY }}
+        run: |
+          # assume each subfolder of ./tests is a test suite and run it
+          for test in $(find ./tests/* -type d); do
+            cd $test && ./run.sh
+            cd - > /dev/null
+          done
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Bake and Push Docker Images
+        if: github.event_name != 'pull_request'
+        uses: docker/bake-action@v5
+        with:
+          source: .
+          push: true
+          set: |
+            php.platforms=linux/amd64,linux/arm64
+            php.cache-from=type=gha,scope=cache-php-${{ matrix.php }}
+            php.cache-to=type=gha,scope=cache-php-${{ matrix.php }},mode=max
