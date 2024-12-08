@@ -78,6 +78,6 @@ jobs:
           source: .
           push: true
           set: |
-            php.platforms=linux/amd64,linux/arm64
+            php.platform=linux/amd64,linux/arm64
             php.cache-from=type=gha,scope=cache-php-${{ matrix.php }}
             php.cache-to=type=gha,scope=cache-php-${{ matrix.php }},mode=max
