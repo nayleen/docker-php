@@ -73,10 +73,11 @@ jobs:
             cd - > /dev/null
           done
 
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v3
-#        with:
-#          platforms: linux/arm64
+      - name: Set up QEMU
+        if: github.event_name != 'pull_request'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
 
       - name: Bake and Push Docker Images
         if: github.event_name != 'pull_request'
@@ -87,6 +88,6 @@ jobs:
           source: .
           push: true
           set: |
-            php.platform=linux/amd64
+            php.platform=linux/amd64,linux/arm64
             php.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
             php.cache-to=type=registry,ref=${{ env.IMAGE }}-cache,mode=max
