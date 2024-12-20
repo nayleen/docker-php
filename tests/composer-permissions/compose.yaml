@@ -1,6 +1,6 @@
 services:
   composer:
-    image: ${REGISTRY:-ghcr.io/nayleen}/php-zts:${PHP_VERSION:-8.4}
+    image: ${REGISTRY:-docker.io/nayleen}/php-zts:${PHP_VERSION:-8.4}
     command: ["bash", "-c", "composer install --quiet --no-interaction --no-progress && rm -r vendor/"]
     volumes:
       - $PWD:/app/src
