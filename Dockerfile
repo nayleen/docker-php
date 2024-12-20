@@ -63,6 +63,7 @@ RUN \
     parallel \
     pcntl \
     protobuf \
+    shmop \
     sockets \
     sysvmsg \
     sysvsem \
