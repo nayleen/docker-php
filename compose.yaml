@@ -1,6 +1,6 @@
 services:
   php:
-    image: ${REGISTRY:-docker.io/nayleen}/php-zts:${PHP_VERSION:-8.4}
+    image: ${REGISTRY:-docker.io/nayleen}/php:${PHP_VERSION:-8.4}
     build:
       context: .
       target: php

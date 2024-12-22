@@ -43,7 +43,7 @@ jobs:
         run: echo "PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
 
       - name: Export Image Name to ENV
-        run: echo "IMAGE=${{ env.REMOTE_REGISTRY }}/php-zts:${{ matrix.php }}" >> $GITHUB_ENV
+        run: echo "IMAGE=${{ env.REMOTE_REGISTRY }}/php:${{ matrix.php }}" >> $GITHUB_ENV
 
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v3

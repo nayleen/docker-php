@@ -1,6 +1,6 @@
 ARG PHP_VERSION="8.4"
 
-FROM php:${PHP_VERSION}-zts AS php
+FROM php:${PHP_VERSION} AS php
 
 # export ENV variables
 ENV \
@@ -60,7 +60,6 @@ RUN \
     msgpack \
     opcache \
     opentelemetry \
-    parallel \
     pcntl \
     protobuf \
     shmop \

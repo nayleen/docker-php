@@ -1,1 +1,1 @@
-# docker-php-zts
+# docker-php
