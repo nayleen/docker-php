@@ -54,7 +54,7 @@ jobs:
           driver-opts: network=host
 
       - name: Build Local Images
-        uses: docker/bake-action@v5
+        uses: docker/bake-action@v6
         env:
           REGISTRY: ${{ env.LOCAL_REGISTRY }}
           DOCKER_BUILD_SUMMARY: false
@@ -84,7 +84,7 @@ jobs:
 
       - name: Bake and Push Docker Images
         if: github.event_name != 'pull_request'
-        uses: docker/bake-action@v5
+        uses: docker/bake-action@v6
         env:
           REGISTRY: ${{ env.REMOTE_REGISTRY }}
         with:
