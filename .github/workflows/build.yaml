@@ -17,11 +17,13 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
+env:
+  REMOTE_REGISTRY: docker.io/nayleen
+
 jobs:
   build:
     env:
       LOCAL_REGISTRY: localhost:5000
-      REMOTE_REGISTRY: docker.io/nayleen
     services:
       registry:
         image: registry:2
