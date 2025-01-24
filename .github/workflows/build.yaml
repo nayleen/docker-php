@@ -97,6 +97,7 @@ jobs:
           set: |
             php.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
             php.cache-to=type=registry,ref=${{ env.IMAGE }}-cache,mode=max
+            php.tags=${{ env.IMAGE }}
 
   combine-manifests:
     if: github.event_name != 'pull_request_target'
