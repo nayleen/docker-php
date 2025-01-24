@@ -1,0 +1,8 @@
+services:
+  php:
+    image: ${REGISTRY:-docker.io/nayleen}/php:${PHP_VERSION:-8.4}
+    build:
+      context: .
+      target: php
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.4}

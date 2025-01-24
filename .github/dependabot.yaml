@@ -1,0 +1,28 @@
+version: 2
+
+registries:
+  docker-hub:
+    type: docker-registry
+    url: https://docker.io
+    username: ${{ secrets.DOCKER_USERNAME }}
+    password: ${{ secrets.DOCKER_PASSWORD }}
+
+updates:
+  # daily update checks of upstream docker images
+  - package-ecosystem: docker
+    directory: "/"
+    registries:
+      - docker-hub
+    schedule:
+      interval: daily
+      time: "09:00"
+      timezone: Europe/Berlin
+
+  # weekly updates of GHA
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Berlin

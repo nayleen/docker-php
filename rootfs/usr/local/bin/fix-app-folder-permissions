@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# test permissions within the working directory
+set +e
+mkdir -p "/app/src/.file_system_permission_test"
+chmod 700 "/app/src/.file_system_permission_test"
+su app -c "touch /app/src/.file_system_permission_test/test > /dev/null 2>&1"
+HAS_CONSISTENT_RIGHTS=$?
+
+if [ "$HAS_CONSISTENT_RIGHTS" != "0" ]; then
+    DOCKER_USER=$(ls -dl "/app/src" | cut -d " " -f 3)
+else
+    # on MacOS and Windows root will be the owner of the mounted file
+    # and we can proceed as-is, since those platforms don't enforce permissions
+    FILE_OWNER=$(ls -dl "/app/src/.file_system_permission_test/test" | cut -d " " -f 3)
+
+    if [ "$FILE_OWNER" == "root" ]; then
+        DOCKER_USER=app
+    else
+        DOCKER_USER=$FILE_OWNER
+    fi
+fi
+
+rm -rf "/app/src/.file_system_permission_test"
+set -e
+
+# change user id of the app user to match the host user id
+if [[ "$DOCKER_USER" =~ ^[0-9]+$ ]]; then
+    usermod -u "$DOCKER_USER" -G sudo app
+    DOCKER_USER=app
+fi
+
+DOCKER_USER_ID=$(id -ur "$DOCKER_USER")
+
+# change the owner of the app folder to the new app user
+if [ "$DOCKER_USER_ID" != "1000" ]; then
+    chown -R "$DOCKER_USER_ID" /app 2>/dev/null || :
+fi
+
+echo "$DOCKER_USER_ID"
