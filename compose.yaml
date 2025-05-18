@@ -1,8 +1,76 @@
 services:
-  php:
-    image: ${REGISTRY:-docker.io/nayleen}/php:${PHP_VERSION:-8.4}
+  php-cli:
+    image: ${REGISTRY:-docker.io/nayleen}/php:${PHP_VERSION:-8.4}-cli
     build:
       context: .
-      target: php
       args:
+        PHP_PACKAGES: >-
+          @composer
+          bcmath
+          curl
+          ev
+          event
+          grpc
+          igbinary
+          msgpack
+          opcache
+          opentelemetry
+          pcntl
+          protobuf
+          shmop
+          sockets
+          sysvmsg
+          sysvsem
+          sysvshm
+          uuid
+          uv
+          xdebug
+          zip
+          zstd
+        PHP_VARIANT: "cli"
         PHP_VERSION: ${PHP_VERSION:-8.4}
+        SYSTEM_PACKAGES: >-
+          ca-certificates
+          curl
+          lsb-release
+          sudo
+          unzip
+          wget
+          zip
+
+  php-zts:
+    image: ${REGISTRY:-docker.io/nayleen}/php:${PHP_VERSION:-8.4}-zts
+    build:
+      context: .
+      args:
+        PHP_PACKAGES: >-
+          @composer
+          bcmath
+          curl
+          grpc
+          igbinary
+          msgpack
+          opcache
+          opentelemetry
+          parallel
+          pcntl
+          protobuf
+          shmop
+          sockets
+          sysvmsg
+          sysvsem
+          sysvshm
+          uuid
+          xdebug
+          zip
+          zstd
+        PHP_VARIANT: "zts"
+        PHP_VERSION: ${PHP_VERSION:-8.4}
+        SYSTEM_PACKAGES: >-
+          ca-certificates
+          curl
+          lsb-release
+          sudo
+          unzip
+          wget
+          zip

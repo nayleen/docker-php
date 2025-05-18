@@ -1,6 +1,10 @@
+ARG PHP_VARIANT="cli"
 ARG PHP_VERSION="8.4"
 
-FROM php:${PHP_VERSION} AS php
+FROM php:${PHP_VERSION}-${PHP_VARIANT}
+
+ARG PHP_PACKAGES
+ARG SYSTEM_PACKAGES
 
 # export ENV variables
 ENV \
@@ -20,26 +24,21 @@ COPY --link rootfs /
 ADD --link --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/sbin/install-php-extensions
 
 # system setup
-RUN install-packages \
-    ca-certificates \
-    curl \
-    lsb-release \
-    sudo \
-    unzip \
-    wget \
-    zip \
+RUN set -eu; \
+# install system packages
+  install-packages $SYSTEM_PACKAGES; \
 # create app user
-  && useradd \
+  useradd \
     --groups sudo \
     --no-create-home \
     --shell /bin/bash \
     --uid 1000 \
-    app \
+    app; \
 # create world-writable phpstorm coverage directory in the expected location
-  && mkdir -p /opt/phpstorm-coverage \
-  && chmod a+rw /opt/phpstorm-coverage \
+  mkdir -p /opt/phpstorm-coverage; \
+  chmod a+rw /opt/phpstorm-coverage; \
 # cleanup
-  && rm -rf \
+  rm -rf \
     /tmp/* \
     /usr/local/bin/docker-php-entrypoint \
     /var/lib/apt/lists/* \
@@ -48,41 +47,20 @@ RUN install-packages \
     /var/tmp/*
 
 # php setup
-RUN \
+RUN set -eu; \
 # install additional extensions
-  install-php-extensions \
-    @composer \
-    bcmath \
-    curl \
-    ev \
-    event \
-    igbinary \
-    msgpack \
-    opcache \
-    opentelemetry \
-    pcntl \
-    protobuf \
-    shmop \
-    sockets \
-    sysvmsg \
-    sysvsem \
-    sysvshm \
-    uuid \
-    uv \
-    xdebug \
-    zip \
-    zstd \
+  install-php-extensions $PHP_PACKAGES; \
 # run composer self-update
-  && composer self-update \
+  composer self-update; \
 # move php.ini template files to /app/etc/php
-  && mv /usr/local/etc/php/php.ini-development /app/etc/php/php.ini-development \
-  && mv /usr/local/etc/php/php.ini-production /app/etc/php/php.ini-production \
+  mv /usr/local/etc/php/php.ini-development /app/etc/php/php.ini-development; \
+  mv /usr/local/etc/php/php.ini-production /app/etc/php/php.ini-production; \
 # symlink /app/etc/php/php.ini (copied into the container or symlinked during init) back to its scan location
-  && ln -sf /app/etc/php/php.ini /usr/local/etc/php/php.ini \
+  ln -sf /app/etc/php/php.ini /usr/local/etc/php/php.ini; \
 # set app folder permissions
-  && chown -R app:app /app \
+  chown -R app:app /app; \
 # cleanup
-  && rm -rf \
+  rm -rf \
     /tmp/* \
     /var/lib/apt/lists/* \
     /var/cache/* \

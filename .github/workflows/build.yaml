@@ -37,6 +37,9 @@ jobs:
           - 8.2
           - 8.3
           - 8.4
+        variant:
+          - cli
+          - zts
         arch:
           - amd64
           - arm64
@@ -52,11 +55,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Export PHP Version to ENV
+      - name: Export PHP variant to ENV
+        run: echo "PHP_VARIANT=${{ matrix.variant }}" >> $GITHUB_ENV
+
+      - name: Export PHP version to ENV
         run: echo "PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
 
       - name: Export Image Name to ENV
-        run: echo "IMAGE=${{ env.REMOTE_REGISTRY }}/php:${{ matrix.php }}-${{ matrix.arch }}" >> $GITHUB_ENV
+        run: echo "IMAGE=${{ env.REMOTE_REGISTRY }}/php:${{ matrix.php }}-${{ matrix.arch }}-${{ matrix.variant }}" >> $GITHUB_ENV
 
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -73,8 +79,9 @@ jobs:
           source: .
           load: true
           push: true
+          targets: php-${{ matrix.variant }}
           set: |
-            php.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
+            php-${{ matrix.variant }}.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
 
       - name: Test Local Images
         env:
@@ -94,10 +101,11 @@ jobs:
         with:
           source: .
           push: ${{ github.repository == 'nayleen/docker-php' }}
+          targets: php-${{ matrix.variant }}
           set: |
-            php.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
-            php.cache-to=type=registry,ref=${{ env.IMAGE }}-cache,mode=max
-            php.tags=${{ env.IMAGE }}
+            php-${{ matrix.variant }}.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
+            php-${{ matrix.variant }}.cache-to=type=registry,ref=${{ env.IMAGE }}-cache,mode=max
+            php-${{ matrix.variant }}.tags=${{ env.IMAGE }}
 
   combine-manifests:
     if: github.event_name != 'pull_request_target'
@@ -120,7 +128,13 @@ jobs:
       - name: Combine Manifests
         run: |
           for phpVersion in "8.1" "8.2" "8.3" "8.4"; do
+            for variant in "cli" "zts"; do
+              docker buildx imagetools create -t ${{ env.IMAGE }}:${phpVersion}-${variant} \
+                ${{ env.IMAGE }}:${phpVersion}-amd64-${variant} \
+                ${{ env.IMAGE }}:${phpVersion}-arm64-${variant}
+            done
+
+            # alias -cli to plain name
             docker buildx imagetools create -t ${{ env.IMAGE }}:${phpVersion} \
-              ${{ env.IMAGE }}:${phpVersion}-amd64 \
-              ${{ env.IMAGE }}:${phpVersion}-arm64
+                ${{ env.IMAGE }}:${phpVersion}-cli
           done
