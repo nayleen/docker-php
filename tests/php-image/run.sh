@@ -40,6 +40,32 @@ if ! docker compose pull --quiet; then
     exit 1
 fi
 
+# check extensions
+validate_php_module "bcmath"
+validate_php_module "curl"
+validate_php_module "ev"
+validate_php_module "event"
+validate_php_module "igbinary"
+validate_php_module "json"
+validate_php_module "mbstring"
+validate_php_module "msgpack"
+validate_php_module "openssl"
+validate_php_module "opentelemetry"
+validate_php_module "pcntl"
+validate_php_module "pcre"
+validate_php_module "protobuf"
+validate_php_module "shmop"
+validate_php_module "sockets"
+validate_php_module "sysvmsg"
+validate_php_module "sysvsem"
+validate_php_module "sysvshm"
+validate_php_module "uuid"
+validate_php_module "uv"
+validate_php_module "xdebug"
+validate_php_module "zip"
+validate_php_module "zstd"
+validate_php_module "Zend OPcache"
+
 # check php.ini settings
 validate_php_ini_setting "date.timezone" "UTC"
 validate_php_ini_setting "expose_php" "Off"
