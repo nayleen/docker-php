@@ -9,6 +9,8 @@ jobs:
   check:
     if: github.repository == 'nayleen/docker-php'
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     strategy:
       fail-fast: false
       matrix:
