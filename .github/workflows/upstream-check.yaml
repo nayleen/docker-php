@@ -1,0 +1,55 @@
+name: Check Upstream Image
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # every day at midnight
+  workflow_dispatch:
+
+jobs:
+  check:
+    if: github.repository == 'nayleen/docker-php'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - 8.3
+          - 8.4
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    steps:
+      - name: Download Previous Digest Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: previous-digest-${{ matrix.php }}
+          path: .
+
+      - name: Fetch Upstream Image Digest
+        run: |
+          echo "$(docker buildx imagetools inspect "php:${{ matrix.php }}-cli" --format "{{json .Manifest}}" | jq -r .digest)" > ./current-digest-${{ matrix.php }}
+
+      - name: Compare Digests
+        id: compare
+        run: |
+          touch ./previous-digest-${{ matrix.php }}
+
+          if cmp -s ./current-digest-${{ matrix.php }} ./previous-digest-${{ matrix.php }}; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Current Digest Artifact
+        if: steps.compare.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: previous-digest-${{ matrix.php }}
+          path: ./current-digest-${{ matrix.php }}
+
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.changed == 'true' }}
+    uses: nayleen/docker-php/.github/workflows/build.yaml@main
+    with:
+      php-version: ${{ matrix.php }}
+    secrets: inherit
