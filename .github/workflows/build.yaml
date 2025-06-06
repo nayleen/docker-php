@@ -7,8 +7,6 @@ on:
         required: true
         type: string
     secrets:
-      DOCKER_USERNAME:
-        required: true
       DOCKER_PASSWORD:
         required: true
   workflow_dispatch:
@@ -28,7 +26,7 @@ jobs:
           - arm64
         include:
           - php: ${{ inputs.php-version }}
-    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }} # nice segfaults, 24.04
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       contents: read
       packages: write
@@ -46,9 +44,6 @@ jobs:
       - name: Export PHP version to ENV
         run: echo "PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
 
-      - name: Export Image Name to ENV
-        run: echo "IMAGE=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}" >> $GITHUB_ENV
-
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -60,13 +55,13 @@ jobs:
           source: .
           push: true
           set: |
-            php.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
-            php.cache-to=type=registry,ref=${{ env.IMAGE }}-cache,mode=max
-            php.tags=${{ env.IMAGE }}
+            php.cache-from=type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache
+            php.cache-to=type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache,mode=max
+            php.tags=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}
 
   combine-manifests:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
