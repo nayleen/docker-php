@@ -2,8 +2,7 @@ ARG PHP_VERSION="8.4"
 
 FROM php:${PHP_VERSION}-cli
 
-ARG PHP_EXTENSIONS="@composer"
-#ARG PHP_EXTENSIONS="@composer bcmath curl grpc igbinary msgpack opcache opentelemetry pcntl protobuf shmop sockets uuid uv xdebug zip zstd"
+ARG PHP_EXTENSIONS="@composer bcmath curl grpc igbinary msgpack opcache opentelemetry pcntl protobuf shmop sockets uuid uv xdebug zip zstd"
 ARG SYSTEM_PACKAGES="ca-certificates curl lsb-release sudo unzip wget zip"
 
 # export ENV variables
