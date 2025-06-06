@@ -25,10 +25,10 @@ jobs:
           echo "$(docker buildx imagetools inspect "php:${{ matrix.php }}-cli" --format "{{json .Manifest}}" | jq -r .digest)" > ./current-digest-${{ matrix.php }}
 
       - name: Download Previous Digest Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/cache/restore@v4
         with:
-          name: previous-digest-${{ matrix.php }}
-          path: .
+          key: previous-digest-${{ matrix.php }}
+          path: ./previous-digest-${{ matrix.php }}
         continue-on-error: true
 
       - name: Compare Digests
@@ -42,12 +42,17 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Rename Previous Digest Artifact
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          mv ./current-digest-${{ matrix.php }} ./previous-digest-${{ matrix.php }}
+
       - name: Upload Current Digest Artifact
         if: steps.compare.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/cache/save@v4
         with:
-          name: previous-digest-${{ matrix.php }}
-          path: ./current-digest-${{ matrix.php }}
+          key: previous-digest-${{ matrix.php }}
+          path: ./previous-digest-${{ matrix.php }}
 
       - name: Build Images
         if: steps.compare.outputs.changed == 'true'
