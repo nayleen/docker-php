@@ -52,4 +52,7 @@ jobs:
     uses: nayleen/docker-php/.github/workflows/build.yaml@main
     with:
       php-version: ${{ matrix.php }}
+    permissions:
+      contents: read
+      packages: write
     secrets: inherit
