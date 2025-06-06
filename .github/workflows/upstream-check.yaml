@@ -34,7 +34,7 @@ jobs:
         run: |
           touch ./previous-digest-${{ matrix.php }}
 
-          if cmp -s ./current-digest-${{ matrix.php }} ./previous-digest-${{ matrix.php }}; then
+          if ! cmp -s ./current-digest-${{ matrix.php }} ./previous-digest-${{ matrix.php }}; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
