@@ -47,13 +47,9 @@ jobs:
           name: previous-digest-${{ matrix.php }}
           path: ./current-digest-${{ matrix.php }}
 
-  build:
-    needs: check
-    if: ${{ needs.check.outputs.changed == 'true' }}
-    uses: nayleen/docker-php/.github/workflows/build.yaml@main
-    with:
-      php-version: ${{ matrix.php }}
-    permissions:
-      contents: read
-      packages: write
-    secrets: inherit
+      - name: Build Images
+        if: steps.compare.outputs.changed == 'true'
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: 'Build Images'
+          inputs: '{ "php-version": "${{ matrix.php }}" }'

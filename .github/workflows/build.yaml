@@ -1,14 +1,12 @@
 name: Build Images
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       php-version:
         required: true
         type: string
-    secrets:
-      DOCKER_PASSWORD:
-        required: true
+        description: 'PHP version to build'
 
 jobs:
   build:
