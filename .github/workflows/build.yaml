@@ -9,11 +9,6 @@ on:
     secrets:
       DOCKER_PASSWORD:
         required: true
-  workflow_dispatch:
-    inputs:
-      php-version:
-        required: true
-        description: 'PHP version to build'
 
 jobs:
   build:
@@ -26,7 +21,7 @@ jobs:
           - arm64
         include:
           - php: ${{ inputs.php-version }}
-    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }} # nice performance regression, 24.04 on arm
     permissions:
       contents: read
       packages: write
@@ -61,7 +56,7 @@ jobs:
 
   combine-manifests:
     needs: build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
