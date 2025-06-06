@@ -18,15 +18,16 @@ jobs:
     outputs:
       changed: ${{ steps.compare.outputs.changed }}
     steps:
+      - name: Fetch Upstream Image Digest
+        run: |
+          echo "$(docker buildx imagetools inspect "php:${{ matrix.php }}-cli" --format "{{json .Manifest}}" | jq -r .digest)" > ./current-digest-${{ matrix.php }}
+
       - name: Download Previous Digest Artifact
         uses: actions/download-artifact@v4
         with:
           name: previous-digest-${{ matrix.php }}
           path: .
-
-      - name: Fetch Upstream Image Digest
-        run: |
-          echo "$(docker buildx imagetools inspect "php:${{ matrix.php }}-cli" --format "{{json .Manifest}}" | jq -r .digest)" > ./current-digest-${{ matrix.php }}
+        continue-on-error: true
 
       - name: Compare Digests
         id: compare
