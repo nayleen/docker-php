@@ -1,114 +1,78 @@
 name: Build Images
 
 on:
-  pull_request_target:
-    types:
-      - opened
-      - reopened
-      - synchronize
-  push:
-    branches:
-      - main
-  schedule:
-    # run every Monday and Friday at 00:00 UTC
-    - cron: '0 0 * * 1,5'
-
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
-
-env:
-  REMOTE_REGISTRY: docker.io/nayleen
+  workflow_call:
+    inputs:
+      php-version:
+        required: true
+        type: string
+      registry:
+        required: false
+        type: string
+        default: 'docker.io/nayleen'
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
+  workflow_dispatch:
+    inputs:
+      php-version:
+        required: true
+        description: 'PHP version to build'
+      registry:
+        required: false
+        type: string
+        default: 'docker.io/nayleen'
+        description: 'Container registry to push to'
 
 jobs:
   build:
-    env:
-      LOCAL_REGISTRY: localhost:5000
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
+    if: github.repository == 'nayleen/docker-php'
     strategy:
       fail-fast: false
       matrix:
-        php:
-          - 8.1
-          - 8.2
-          - 8.3
-          - 8.4
-        variant:
-          - cli
-          - zts
         arch:
           - amd64
           - arm64
+        include:
+          - php: ${{ inputs.php-version }}
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }} # nice segfaults, 24.04
     steps:
       - name: Check Out
         uses: actions/checkout@v4
 
       - name: Login to Container Registry
-        if: github.repository == 'nayleen/docker-php'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Export PHP variant to ENV
-        run: echo "PHP_VARIANT=${{ matrix.variant }}" >> $GITHUB_ENV
+          registry: ${{ inputs.registry }}
+          username: nayleen
+          password: ${{ secrets.DOCKER_PASSWORD || secrets.GITHUB_TOKEN }}
 
       - name: Export PHP version to ENV
         run: echo "PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
 
       - name: Export Image Name to ENV
-        run: echo "IMAGE=${{ env.REMOTE_REGISTRY }}/php:${{ matrix.php }}-${{ matrix.arch }}-${{ matrix.variant }}" >> $GITHUB_ENV
+        run: echo "IMAGE=${{ inputs.registry }}/php:${{ matrix.php }}-${{ matrix.arch }}" >> $GITHUB_ENV
 
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: network=host
 
-      - name: Build Local Images
-        uses: docker/bake-action@v6
-        env:
-          REGISTRY: ${{ env.LOCAL_REGISTRY }}
-          DOCKER_BUILD_SUMMARY: false
-          DOCKER_BUILD_RECORD_UPLOAD: false
-        with:
-          source: .
-          load: true
-          push: true
-          targets: php-${{ matrix.variant }}
-          set: |
-            php-${{ matrix.variant }}.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
-
-      - name: Test Local Images
-        env:
-          REGISTRY: ${{ env.LOCAL_REGISTRY }}
-        run: |
-          # assume each subfolder of ./tests is a test suite and run it
-          for test in $(find ./tests/* -type d); do
-            cd $test && ./run.sh
-            cd - > /dev/null
-          done
-
       - name: Bake and Push Docker Images
-        if: github.event_name != 'pull_request_target'
         uses: docker/bake-action@v6
         env:
-          REGISTRY: ${{ env.REMOTE_REGISTRY }}
+          REGISTRY: ${{ inputs.registry }}
         with:
           source: .
-          push: ${{ github.repository == 'nayleen/docker-php' }}
-          targets: php-${{ matrix.variant }}
+          push: true
           set: |
-            php-${{ matrix.variant }}.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
-            php-${{ matrix.variant }}.cache-to=type=registry,ref=${{ env.IMAGE }}-cache,mode=max
-            php-${{ matrix.variant }}.tags=${{ env.IMAGE }}
+            php.cache-from=type=registry,ref=${{ env.IMAGE }}-cache
+            php.cache-to=type=registry,ref=${{ env.IMAGE }}-cache,mode=max
+            php.tags=${{ env.IMAGE }}
 
   combine-manifests:
-    if: github.event_name != 'pull_request_target'
     needs: build
     runs-on: ubuntu-22.04
     steps:
@@ -116,25 +80,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Login to Container Registry
-        if: github.repository == 'nayleen/docker-php'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Export Image Name Prefix to ENV
-        run: echo "IMAGE=${{ env.REMOTE_REGISTRY }}/php" >> $GITHUB_ENV
+          registry: ${{ inputs.registry }}
+          username: nayleen
+          password: ${{ secrets.DOCKER_PASSWORD || secrets.GITHUB_TOKEN }}
 
       - name: Combine Manifests
         run: |
-          for phpVersion in "8.1" "8.2" "8.3" "8.4"; do
-            for variant in "cli" "zts"; do
-              docker buildx imagetools create -t ${{ env.IMAGE }}:${phpVersion}-${variant} \
-                ${{ env.IMAGE }}:${phpVersion}-amd64-${variant} \
-                ${{ env.IMAGE }}:${phpVersion}-arm64-${variant}
-            done
-
-            # alias -cli to plain name
-            docker buildx imagetools create -t ${{ env.IMAGE }}:${phpVersion} \
-                ${{ env.IMAGE }}:${phpVersion}-cli
-          done
+          docker buildx imagetools create -t ${{ inputs.registry }}/php:${{ inputs.php-version }} \
+            ${{ inputs.registry }}/php:${{ inputs.php-version }}-amd64 \
+            ${{ inputs.registry }}/php:${{ inputs.php-version }}-arm64
