@@ -1,0 +1,101 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - .github/workflows/ci.yaml
+      - rootfs/**
+      - tests/**
+      - .dockerignore
+      - compose.yaml
+      - Dockerfile
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/ci.yaml
+      - rootfs/**
+      - .dockerignore
+      - compose.yaml
+      - Dockerfile
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: ${{ github.repository == 'nayleen/docker-php' }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }} # nice segfaults, 24.04
+    permissions:
+      actions: write
+      contents: read
+      packages: read
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - 8.1
+          - 8.2
+          - 8.3
+          - 8.4
+        arch:
+          - amd64
+          - arm64
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: nayleen
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Export PHP version to ENV
+        run: echo "PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Build Local Images
+        uses: docker/bake-action@v6
+        env:
+          REGISTRY: localhost:5000
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          source: .
+          load: true
+          push: true
+          set: |
+            php.cache-from=type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache
+
+      - name: Test Local Images
+        env:
+          REGISTRY: localhost:5000
+        run: |
+          # assume each subfolder of ./tests is a test suite and run it
+          for test in $(find ./tests/* -type d); do
+            cd $test && ./run.sh
+            cd - > /dev/null
+          done
+
+      - name: Build Release Images
+        if: ${{ github.event_name == 'push' }}
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: 'Build Images'
+          inputs: '{ "php-version": "${{ matrix.php }}" }'

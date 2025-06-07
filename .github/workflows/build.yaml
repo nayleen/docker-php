@@ -10,7 +10,11 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'nayleen/docker-php'
+    if: ${{ github.repository == 'nayleen/docker-php' }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }} # nice performance regression, 24.04 on arm
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -19,10 +23,6 @@ jobs:
           - arm64
         include:
           - php: ${{ inputs.php-version }}
-    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }} # nice performance regression, 24.04 on arm
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Check Out
         uses: actions/checkout@v4
@@ -56,12 +56,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       packages: write
     steps:
-      - name: Check Out
-        uses: actions/checkout@v4
-
       - name: Login to Container Registry
         uses: docker/login-action@v3
         with:
@@ -74,3 +70,13 @@ jobs:
           docker buildx imagetools create -t ghcr.io/nayleen/php:${{ inputs.php-version }} \
             ghcr.io/nayleen/php:${{ inputs.php-version }}-amd64 \
             ghcr.io/nayleen/php:${{ inputs.php-version }}-arm64
+
+      - name: Fetch Upstream Image Digest
+        run: |
+          echo "$(docker buildx imagetools inspect "php:${{ inputs.php-version }}-cli" --format "{{json .Manifest}}" | jq -r .digest)" > ./previous-digest-${{ inputs.php-version }}
+
+      - name: Upload Current Digest
+        uses: actions/cache/save@v4
+        with:
+          key: previous-digest-${{ inputs.php-version }}
+          path: ./previous-digest-${{ inputs.php-version }}

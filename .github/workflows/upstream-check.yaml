@@ -7,7 +7,7 @@ on:
 
 jobs:
   check:
-    if: github.repository == 'nayleen/docker-php'
+    if: ${{ github.repository == 'nayleen/docker-php' }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -44,19 +44,8 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Rename Current -> Previous Digest
-        if: steps.compare.outputs.changed == 'true'
-        run: mv ./current-digest-${{ matrix.php }} ./previous-digest-${{ matrix.php }}
-
-      - name: Upload Current Digest
-        if: steps.compare.outputs.changed == 'true'
-        uses: actions/cache/save@v4
-        with:
-          key: previous-digest-${{ matrix.php }}
-          path: ./previous-digest-${{ matrix.php }}
-
       - name: Build Images
-        if: steps.compare.outputs.changed == 'true'
+        if: ${{ steps.compare.outputs.changed == 'true' }}
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: 'Build Images'
