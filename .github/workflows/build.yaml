@@ -8,6 +8,10 @@ on:
         type: string
         description: 'PHP version to build'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.php-version }}
+  cancel-in-progress: false
+
 jobs:
   build:
     if: ${{ github.repository == 'nayleen/docker-php' }}
@@ -54,7 +58,7 @@ jobs:
 
   combine-manifests:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       packages: write
     steps:
