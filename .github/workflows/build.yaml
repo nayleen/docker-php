@@ -60,6 +60,7 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     permissions:
+      actions: write
       packages: write
     steps:
       - name: Login to Container Registry
@@ -78,6 +79,11 @@ jobs:
       - name: Fetch Upstream Image Digest
         run: |
           echo "$(docker buildx imagetools inspect "php:${{ inputs.php-version }}-cli" --format "{{json .Manifest}}" | jq -r .digest)" > ./previous-digest-${{ inputs.php-version }}
+
+      - name: Clear Cache
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh cache delete --repo "${{ github.repository }}" "previous-digest-${{ inputs.php-version }}"
 
       - name: Upload Current Digest
         uses: actions/cache/save@v4

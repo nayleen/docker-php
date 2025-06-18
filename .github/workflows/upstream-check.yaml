@@ -38,6 +38,10 @@ jobs:
         run: |
           touch ./previous-digest-${{ matrix.php }}
 
+          echo "Comparing current and previous digests for PHP${{ matrix.php }} upstream image:"
+          echo "  current: $(cat ./current-digest-${{ matrix.php }})"
+          echo "  previous: $(cat ./previous-digest-${{ matrix.php }})"
+
           if ! cmp -s ./current-digest-${{ matrix.php }} ./previous-digest-${{ matrix.php }}; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
