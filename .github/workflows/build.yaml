@@ -58,12 +58,14 @@ jobs:
         uses: docker/bake-action@v6
         with:
           source: .
+          files:
+            ./compose.yaml
+            cwd://${{ steps.meta.outputs.bake-file-tags }}
+            cwd://${{ steps.meta.outputs.bake-file-annotations }}
           push: true
           set: |
-            php.annotations=${{ steps.meta.outputs.annotations }}
             php.cache-from=type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache
             php.cache-to=type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache,mode=max
-            php.tags=ghcr.io/nayleen/php:${{ steps.meta.outputs.tags }}
 
   combine-manifests:
     needs: build
