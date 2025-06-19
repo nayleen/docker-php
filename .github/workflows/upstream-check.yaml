@@ -48,9 +48,9 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build Images
+      - name: Build PHP${{ matrix.php }} Images
         if: ${{ steps.compare.outputs.changed == 'true' }}
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: 'Build Images'
+          workflow: build.yaml
           inputs: '{ "php-version": "${{ matrix.php }}" }'

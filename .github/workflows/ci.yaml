@@ -94,5 +94,5 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: 'Build Images'
+          workflow: build.yaml
           inputs: '{ "php-version": "${{ matrix.php }}" }'
