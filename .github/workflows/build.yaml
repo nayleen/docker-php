@@ -15,7 +15,7 @@ concurrency:
 jobs:
   build:
     if: ${{ github.repository == 'nayleen/docker-php' }}
-    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }} # nice performance regression, 24.04 on arm
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }} # nice performance regression, 24.04 on arm
     permissions:
       contents: read
       packages: write
@@ -58,7 +58,7 @@ jobs:
 
   combine-manifests:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       actions: write
       packages: write
@@ -75,19 +75,3 @@ jobs:
           docker buildx imagetools create -t ghcr.io/nayleen/php:${{ inputs.php-version }} \
             ghcr.io/nayleen/php:${{ inputs.php-version }}-amd64 \
             ghcr.io/nayleen/php:${{ inputs.php-version }}-arm64
-
-      - name: Fetch Upstream Image Digest
-        run: |
-          echo "$(docker buildx imagetools inspect "php:${{ inputs.php-version }}-cli" --format "{{json .Manifest}}" | jq -r .digest)" > ./previous-digest-${{ inputs.php-version }}
-
-      - name: Clear Cache
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh cache delete --repo "${{ github.repository }}" "previous-digest-${{ inputs.php-version }}"
-        continue-on-error: true
-
-      - name: Upload Current Digest
-        uses: actions/cache/save@v4
-        with:
-          key: previous-digest-${{ inputs.php-version }}
-          path: ./previous-digest-${{ inputs.php-version }}

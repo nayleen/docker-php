@@ -30,7 +30,7 @@ concurrency:
 jobs:
   test:
     if: ${{ github.repository == 'nayleen/docker-php' }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       actions: write
       contents: read
@@ -90,9 +90,14 @@ jobs:
             cd - > /dev/null
           done
 
+  release:
+    if: ${{ github.repository == 'nayleen/docker-php' && github.event_name == 'push' }}
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
       - name: Build Release Images
-        if: ${{ github.event_name == 'push' }}
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: build.yaml
-          inputs: '{ "php-version": "${{ matrix.php }}" }'
+          workflow: build-all.yaml
