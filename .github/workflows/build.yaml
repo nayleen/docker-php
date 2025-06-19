@@ -84,6 +84,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh cache delete --repo "${{ github.repository }}" "previous-digest-${{ inputs.php-version }}"
+        continue-on-error: true
 
       - name: Upload Current Digest
         uses: actions/cache/save@v4
