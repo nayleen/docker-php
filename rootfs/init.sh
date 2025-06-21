@@ -15,4 +15,9 @@ find "$init_scripts_dir" -executable -type f -print | sort -V | while read -r in
   sudo -E -u "#$DOCKER_USER_ID" "$initScript" "$@"
 done
 
+# first arg is `-f` or `--some-option`
+if [ "${1#-}" != "$1" ]; then
+	set -- php "$@"
+fi
+
 exec "sudo" "-E" "-H" "-u" "#$DOCKER_USER_ID" "$@"
