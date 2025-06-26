@@ -33,14 +33,12 @@ jobs:
           username: nayleen
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve full PHP Version
-        id: php-full-version
-        run: echo "version=$(./tools/resolve-php-version.sh ${{ matrix.php }})" >> $GITHUB_OUTPUT
-
       - name: Compare Base Image Digest with Latest Release
         id: compare-base-image
         run: |
-          BASE_IMAGE="docker.io/php:${{ steps.php-full-version.outputs.version }}-cli"
+          FULL_VERSION=$(./tools/resolve-php-version.sh ${{ matrix.php }})
+
+          BASE_IMAGE="docker.io/php:$FULL_VERSION-cli"
           IMAGE="ghcr.io/nayleen/php:${{ matrix.php }}-amd64"
 
           if ./tools/compare-digests.sh "$IMAGE" "$BASE_IMAGE"; then

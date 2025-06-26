@@ -45,13 +45,14 @@ jobs:
       - name: Custom Metadata
         id: custom-metadata
         run: |
-          PHP_VERSION=$(./tools/resolve-php-version.sh '${{ matrix.php }}')
-          BASE_IMAGE="docker.io/php:${{ matrix.php }}-cli"
-          BASE_IMAGE_DIGEST=$(./tools/base-image-digest.sh "$BASE_IMAGE")
+          FULL_VERSION=$(./tools/resolve-php-version.sh ${{ matrix.php }})
+
+          BASE_IMAGE="docker.io/php:$FULL_VERSION-cli"
+          BASE_IMAGE_DIGEST=$(./tools/docker-image-digest.sh "$BASE_IMAGE")
 
           echo "base-image=$BASE_IMAGE" >> $GITHUB_OUTPUT
-          echo "base-image-digest=$BASE_IMAGE_DIGEST)" >> $GITHUB_OUTPUT
-          echo "php-version=$PHP_VERSION" >> $GITHUB_OUTPUT
+          echo "base-image-digest=$BASE_IMAGE_DIGEST" >> $GITHUB_OUTPUT
+          echo "php-version=$FULL_VERSION" >> $GITHUB_OUTPUT
 
       - name: Docker Metadata
         id: docker-metadata
