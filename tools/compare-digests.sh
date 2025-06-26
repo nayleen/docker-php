@@ -11,7 +11,7 @@ IMAGE="$1"
 BASE_IMAGE="$2"
 
 BASE_IMAGE_DIGEST=$(tools/docker-image-digest.sh "$BASE_IMAGE")
-IMAGE_DIGEST=$(tools/base-image-digest.sh "$IMAGE" "$BASE_IMAGE")
+IMAGE_DIGEST=$(tools/base-image-digest.sh "$IMAGE")
 
 if [ "$BASE_IMAGE_DIGEST" = "$IMAGE_DIGEST" ]; then
   echo "The base image digest matches the image digest." >&2
