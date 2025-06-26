@@ -46,10 +46,11 @@ jobs:
         id: custom-metadata
         run: |
           PHP_VERSION=$(./tools/resolve-php-version.sh '${{ matrix.php }}')
-          BASE_IMAGE="docker.io/php:$PHP_VERSION-cli"
+          BASE_IMAGE="docker.io/php:${{ matrix.php }}-cli"
+          BASE_IMAGE_DIGEST=$(./tools/base-image-digest.sh "$BASE_IMAGE")
 
           echo "base-image=$BASE_IMAGE" >> $GITHUB_OUTPUT
-          echo "base-image-digest=$(./tools/base-image-digest.sh '$BASE_IMAGE')" >> $GITHUB_OUTPUT
+          echo "base-image-digest=$BASE_IMAGE_DIGEST)" >> $GITHUB_OUTPUT
           echo "php-version=$PHP_VERSION" >> $GITHUB_OUTPUT
 
       - name: Docker Metadata
@@ -57,10 +58,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           annotations: |
-            org.opencontainers.image.authors=Nayleen <https://github.com/nayleen>
+            org.opencontainers.image.authors=https://github.com/nayleen
             org.opencontainers.image.base.digest=${{ steps.custom-metadata.outputs.base-image-digest }}
             org.opencontainers.image.base.name=${{ steps.custom-metadata.outputs.base-image }}
-            org.opencontainers.image.source=https://github.com/nayleen/docker-php.git#${{ github.sha }}
             org.opencontainers.image.url=https://github.com/nayleen/docker-php/pkgs/container/php
             org.opencontainers.image.version=${{ steps.custom-metadata.outputs.php-version }}-${{ matrix.arch }}
           images: ghcr.io/nayleen/php
