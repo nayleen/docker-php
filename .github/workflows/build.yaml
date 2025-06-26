@@ -57,7 +57,7 @@ jobs:
         id: docker-metadata
         uses: docker/metadata-action@v5
         env:
-          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest-descriptor,index-descriptor
         with:
           annotations: |
             org.opencontainers.image.authors=https://github.com/nayleen
