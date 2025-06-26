@@ -29,8 +29,7 @@ concurrency:
 
 jobs:
   test:
-    if: ${{ github.repository == 'nayleen/docker-php' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       actions: write
       contents: read
@@ -65,18 +64,17 @@ jobs:
         with:
           driver-opts: network=host
 
-      - name: Build Local Images
-        uses: docker/bake-action@v6
+      - name: Build Local Image
+        uses: docker/build-push-action@v6
         env:
-          REGISTRY: localhost:5000
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
-          source: .
+          cache-from: type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache
+          context: .
           load: true
           push: true
-          set: |
-            php.cache-from=type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-amd64-cache
+          tags: localhost:5000/php
 
       - name: Test Local Images
         env:
@@ -89,9 +87,9 @@ jobs:
           done
 
   release:
-    if: ${{ github.repository == 'nayleen/docker-php' && github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' }}
     needs: test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       actions: write
     steps:

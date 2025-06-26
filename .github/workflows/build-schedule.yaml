@@ -1,0 +1,57 @@
+name: Scheduled Build
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # every day at midnight
+  workflow_dispatch: # for debugging
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.php-version }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - 8.3
+          - 8.4
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v4
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: nayleen
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve full PHP Version
+        id: php-full-version
+        run: echo "version=$(./tools/resolve-php-version.sh ${{ matrix.php }})" >> $GITHUB_OUTPUT
+
+      - name: Compare Base Image Digest with Latest Release
+        id: compare-base-image
+        run: |
+          BASE_IMAGE="docker.io/php:${{ steps.php-full-version.outputs.version }}-cli"
+          IMAGE="ghcr.io/nayleen/php:${{ matrix.php }}-amd64"
+
+          if ./tools/compare-digests.sh "$IMAGE" "$BASE_IMAGE"; then
+            echo "rebuild=false" >> $GITHUB_OUTPUT
+          else
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build PHP${{ matrix.php }} Images
+        if: ${{ steps.compare-base-image.outputs.rebuild == 'true' }}
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: build.yaml
+          inputs: '{ "php-version": "${{ matrix.php }}" }'
