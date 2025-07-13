@@ -70,10 +70,3 @@ USER app
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["php", "-a"]
-
-ONBUILD ARG PHP_ADDITIONAL_EXTENSIONS=""
-ONBUILD USER root
-ONBUILD RUN set -eu; \
-# install additional extensions
-  [ "$PHP_ADDITIONAL_EXTENSIONS" != "" ] && install-php-extensions $PHP_ADDITIONAL_EXTENSIONS || :; \
-ONBUILD USER app
