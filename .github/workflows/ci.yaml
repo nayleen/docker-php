@@ -70,7 +70,7 @@ jobs:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
-          cache-from: type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache
+          cache-from: type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-amd64-cache
           context: .
           load: true
           push: true
