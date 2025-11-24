@@ -47,7 +47,7 @@ jobs:
           - 8.4
     steps:
       - name: Check Out
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Login to Container Registry
         uses: docker/login-action@v3
