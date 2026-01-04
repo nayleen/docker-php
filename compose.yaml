@@ -1,7 +1,7 @@
 services:
   php:
-    image: ${REGISTRY:-ghcr.io/nayleen}/php:${PHP_VERSION:-8.4}
+    image: ${REGISTRY:-ghcr.io/nayleen}/php:${PHP_VERSION:-8.5}
     build:
       context: .
       args:
-        PHP_VERSION: ${PHP_VERSION:-8.4}
+        PHP_VERSION: ${PHP_VERSION:-8.5}
