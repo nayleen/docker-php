@@ -71,6 +71,7 @@ jobs:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
+          build-args: "PHP_VERSION=${{ matrix.php }}"
           cache-from: type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-amd64-cache
           context: .
           load: true
