@@ -43,6 +43,7 @@ fi
 # check extensions
 validate_php_module "bcmath"
 validate_php_module "curl"
+validate_php_module "ffi"
 validate_php_module "igbinary"
 validate_php_module "intl"
 validate_php_module "json"
