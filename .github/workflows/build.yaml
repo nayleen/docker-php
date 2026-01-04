@@ -74,6 +74,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           annotations: ${{ steps.docker-metadata.outputs.annotations }}
+          build-args: "PHP_VERSION=${{ matrix.php }}"
           cache-from: type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache
           cache-to: type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-${{ matrix.arch }}-cache,mode=max
           context: .
