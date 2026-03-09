@@ -71,7 +71,7 @@ jobs:
             type=raw,value=${{ matrix.php }}-${{ matrix.arch }}
 
       - name: Build and Push Docker Images
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           annotations: ${{ steps.docker-metadata.outputs.annotations }}
           build-args: "PHP_VERSION=${{ matrix.php }}"
