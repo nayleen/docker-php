@@ -2,7 +2,7 @@ ARG PHP_VERSION="8.5"
 
 FROM php:${PHP_VERSION}-cli
 
-ARG PHP_EXTENSIONS="@composer bcmath curl ffi igbinary intl msgpack opcache pcntl shmop sockets uuid uv xdebug zip zstd"
+ARG PHP_EXTENSIONS="@composer bcmath curl ffi igbinary intl msgpack opcache pcntl shmop sockets sysvmsg uuid uv xdebug zip zstd"
 ARG SYSTEM_PACKAGES="ca-certificates curl lsb-release nghttp2 unzip wget zip"
 
 # export ENV variables
