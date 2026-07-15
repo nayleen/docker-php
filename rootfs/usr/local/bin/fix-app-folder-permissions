@@ -3,10 +3,16 @@
 set -euo pipefail
 
 # test permissions within the working directory
+PERMISSION_TEST_DIRECTORY="/app/src/.file_system_permission_test_$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')"
+cleanup_permission_test_directory() {
+    rm -rf "$PERMISSION_TEST_DIRECTORY" || :
+}
+trap cleanup_permission_test_directory EXIT
+
 set +e
-mkdir -p "/app/src/.file_system_permission_test"
-chmod 700 "/app/src/.file_system_permission_test"
-su app -c "touch /app/src/.file_system_permission_test/test > /dev/null 2>&1"
+mkdir -p "$PERMISSION_TEST_DIRECTORY"
+chmod 700 "$PERMISSION_TEST_DIRECTORY"
+su app -c "touch \"$PERMISSION_TEST_DIRECTORY/test\" > /dev/null 2>&1"
 HAS_CONSISTENT_RIGHTS=$?
 
 if [ "$HAS_CONSISTENT_RIGHTS" != "0" ]; then
@@ -14,7 +20,7 @@ if [ "$HAS_CONSISTENT_RIGHTS" != "0" ]; then
 else
     # on MacOS and Windows root will be the owner of the mounted file
     # and we can proceed as-is, since those platforms don't enforce permissions
-    FILE_OWNER=$(ls -dl "/app/src/.file_system_permission_test/test" | cut -d " " -f 3)
+    FILE_OWNER=$(ls -dl "$PERMISSION_TEST_DIRECTORY/test" | cut -d " " -f 3)
 
     if [ "$FILE_OWNER" == "root" ]; then
         DOCKER_USER=app
@@ -23,12 +29,13 @@ else
     fi
 fi
 
-rm -rf "/app/src/.file_system_permission_test"
+cleanup_permission_test_directory
+trap - EXIT
 set -e
 
 # change user id of the app user to match the host user id
 if [[ "$DOCKER_USER" =~ ^[0-9]+$ ]]; then
-    usermod -u "$DOCKER_USER" -G sudo app
+    usermod -u "$DOCKER_USER" app
     DOCKER_USER=app
 fi
 

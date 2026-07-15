@@ -3,7 +3,7 @@ ARG PHP_VERSION="8.5"
 FROM php:${PHP_VERSION}-cli
 
 ARG PHP_EXTENSIONS="@composer bcmath curl ffi igbinary intl msgpack opcache pcntl shmop sockets uuid uv xdebug zip zstd"
-ARG SYSTEM_PACKAGES="ca-certificates curl lsb-release nghttp2 sudo unzip wget zip"
+ARG SYSTEM_PACKAGES="ca-certificates curl lsb-release nghttp2 unzip wget zip"
 
 # export ENV variables
 ENV \
@@ -27,7 +27,6 @@ RUN set -eu; \
 ## ensure container scripts are executable
   chmod +x \
     /docker-entrypoint.sh \
-    /init.sh \
     /usr/local/bin/fix-app-folder-permissions \
     /usr/local/bin/install-packages \
     /usr/local/sbin/install-php-extensions; \
@@ -35,7 +34,6 @@ RUN set -eu; \
   install-packages $SYSTEM_PACKAGES; \
 ## create app user
   useradd \
-    --groups sudo \
     --no-create-home \
     --shell /bin/bash \
     --uid 1000 \
@@ -66,7 +64,7 @@ RUN set -eu; \
 
 WORKDIR /app/src
 
-USER app
+USER root
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["php", "-a"]
