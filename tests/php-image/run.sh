@@ -19,9 +19,9 @@ PHP_MODULES_OUTPUT=$(docker compose run --rm php php -m)
 docker compose run --rm php php -r 'exit(posix_geteuid() === 1000 && getmypid() === 1 ? 0 : 1);'
 docker compose run --rm --user 1000:1000 php php -r 'exit(posix_geteuid() === 1000 && posix_getegid() === 1000 && getmypid() === 1 ? 0 : 1);'
 
-# arbitrary UIDs in group 0 can extend the trusted CA bundle
-docker compose run --rm --user 4711:0 php bash -c \
-  'openssl req -x509 -newkey rsa:2048 -nodes -subj /CN=test -keyout /tmp/test.key -out /usr/local/share/ca-certificates/test.crt -days 1 >/dev/null 2>&1 && update-ca-certificates >/dev/null && openssl verify /usr/local/share/ca-certificates/test.crt | grep -q ": OK$"'
+# app can extend the trusted CA bundle without leaving a stage-1 process behind
+docker compose run --rm php bash -c \
+  'test "$$" = 1 && test "$(id -u)" != 0 && openssl req -x509 -newkey rsa:2048 -nodes -subj /CN=test -keyout /tmp/test.key -out /usr/local/share/ca-certificates/test.crt -days 1 >/dev/null 2>&1 && update-ca-certificates >/dev/null && openssl verify /usr/local/share/ca-certificates/test.crt | grep -q ": OK$"'
 
 log_error() {
   echo "::error $1"

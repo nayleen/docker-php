@@ -1,8 +1,19 @@
 services:
   composer:
     image: ${REGISTRY:-ghcr.io/nayleen}/php:${PHP_VERSION:-8.5}
-    user: "${HOST_UID:-1000}:0"
-    command: ["bash", "-c", "composer install --quiet --no-interaction --no-progress && rm -r vendor/"]
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        expected_uid=$$(stat -c %u /app/src)
+        [ "$$expected_uid" = 0 ] && expected_uid=1000
+        test $$$$ = 1
+        test "$$(id -u)" = "$$expected_uid"
+        test -w /app/src
+        test -w /app/var/composer
+        composer install --quiet --no-interaction --no-progress
+        rm -r vendor/
     volumes:
       - $PWD:/app/src
       - ${COMPOSER_CACHE_DIR:-/tmp/composer}:/app/var/composer

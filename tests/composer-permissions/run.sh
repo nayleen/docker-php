@@ -15,10 +15,11 @@ if ! docker compose pull --quiet; then
     exit 1
 fi
 
-COMPOSER_CACHE_DIR=$(mktemp -d)
-trap 'rm -rf "$COMPOSER_CACHE_DIR"' EXIT
+TEST_DIR=$(mktemp -d)
+COMPOSER_CACHE_DIR="$TEST_DIR/composer"
+trap 'rm -rf "$TEST_DIR"' EXIT
 
-if ! HOST_UID=$(id -u) COMPOSER_CACHE_DIR="$COMPOSER_CACHE_DIR" docker compose run --rm composer; then
+if ! COMPOSER_CACHE_DIR="$COMPOSER_CACHE_DIR" docker compose run --rm composer; then
     echo "Composer install failed :("
     exit 1
 fi

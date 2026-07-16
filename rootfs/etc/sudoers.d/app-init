@@ -1,0 +1,3 @@
+# Keep /init.sh and the eventual CMD on PID 1 by using sudo's direct-exec path.
+Defaults!/init.sh !log_servers, !pam_session, !pam_setcred, !use_pty
+app ALL=(root) NOPASSWD: SETENV: /init.sh
