@@ -49,10 +49,10 @@ RUN set -eu; \
   mv /usr/local/etc/php/php.ini-production /app/etc/php/php.ini-production; \
 ## symlink /app/etc/php/php.ini (copied into the container or symlinked during init) back to its scan location
   ln -sf /app/etc/php/php.ini /usr/local/etc/php/php.ini; \
-## let app update application files and trusted certificates
-  chown -R app:app /app /etc/ssl/certs /usr/local/share/ca-certificates; \
 ## set the default php.ini template
   ln -sf /app/etc/php/php.ini-production /app/etc/php/php.ini; \
+## let app update application files and trusted certificates
+  chown -R 1000:1000 /app /etc/ssl/certs /usr/local/share/ca-certificates; \
 ## create world-writable phpstorm coverage directory in the expected location
   mkdir -p /opt/phpstorm-coverage; \
   chmod a+rw /opt/phpstorm-coverage; \
