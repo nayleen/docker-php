@@ -27,7 +27,6 @@ RUN set -eu; \
 ## ensure container scripts are executable
   chmod +x \
     /docker-entrypoint.sh \
-    /usr/local/bin/fix-app-folder-permissions \
     /usr/local/bin/install-packages \
     /usr/local/sbin/install-php-extensions; \
 ## install system packages
@@ -50,6 +49,12 @@ RUN set -eu; \
   ln -sf /app/etc/php/php.ini /usr/local/etc/php/php.ini; \
 ## set app folder permissions
   chown -R app:app /app; \
+## set the default php.ini template
+  ln -sf /app/etc/php/php.ini-production /app/etc/php/php.ini; \
+## allow app and arbitrary users in group 0 to update app files and trusted certificates
+  chown -R app:app /etc/ssl/certs /usr/local/share/ca-certificates; \
+  chgrp -R 0 /app /etc/ssl/certs /usr/local/share/ca-certificates; \
+  chmod -R g=u /app /etc/ssl/certs /usr/local/share/ca-certificates; \
 ## create world-writable phpstorm coverage directory in the expected location
   mkdir -p /opt/phpstorm-coverage; \
   chmod a+rw /opt/phpstorm-coverage; \
@@ -64,7 +69,7 @@ RUN set -eu; \
 
 WORKDIR /app/src
 
-USER root
+USER app
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["php", "-a"]

@@ -3,4 +3,5 @@
 set -euo pipefail
 
 # symlink php.ini depending on chosen template
-ln -sf "/app/etc/php/php.ini-$PHP_INI_TEMPLATE_FILE" /app/etc/php/php.ini
+target="/app/etc/php/php.ini-$PHP_INI_TEMPLATE_FILE"
+[ "$(readlink /app/etc/php/php.ini)" = "$target" ] || ln -sf "$target" /app/etc/php/php.ini
