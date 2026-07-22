@@ -6,96 +6,111 @@ on:
       - opened
       - reopened
       - synchronize
-    paths:
-      - .github/workflows/ci.yaml
-      - rootfs/**
-      - tests/**
-      - .dockerignore
-      - compose.yaml
-      - Dockerfile
   push:
     branches:
       - main
     paths:
-      - .github/workflows/ci.yaml
+      - .github/workflows/**
       - rootfs/**
+      - tools/**
       - .dockerignore
-      - compose.yaml
       - Dockerfile
+      - php-images.json
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
-  test:
+  php-versions:
     runs-on: ubuntu-latest
     permissions:
-      actions: write
       contents: read
-      packages: read
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
+    outputs:
+      versions: ${{ steps.php-versions.outputs.versions }}
+    steps:
+      - name: Check Out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Resolve PHP Versions
+        id: php-versions
+        run: |
+          VERSIONS=$(jq --exit-status --compact-output 'keys | select(length > 0)' php-images.json)
+          echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: php-versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
-        php:
-          - 8.3
-          - 8.4
-          - 8.5
+        php: ${{ fromJSON(needs.php-versions.outputs.versions) }}
     steps:
       - name: Check Out
-        uses: actions/checkout@v7
-
-      - name: Login to Container Registry
-        uses: docker/login-action@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          registry: ghcr.io
-          username: nayleen
-          password: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
-      - name: Export PHP version to ENV
-        run: echo "PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
+      - name: Resolve PHP Image
+        id: php-image
+        env:
+          PHP_VERSION: ${{ matrix.php }}
+        run: |
+          PHP_IMAGE=$(./tools/resolve-php-image.sh "$PHP_VERSION")
+          echo "image=$PHP_IMAGE" >> "$GITHUB_OUTPUT"
 
       - name: Set Up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-        with:
-          driver-opts: network=host
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
 
       - name: Build Local Image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         env:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
-          build-args: "PHP_VERSION=${{ matrix.php }}"
+          build-args: "PHP_IMAGE=${{ steps.php-image.outputs.image }}"
           cache-from: type=registry,ref=ghcr.io/nayleen/php:${{ matrix.php }}-amd64-cache
           context: .
           load: true
-          push: true
-          tags: "localhost:5000/php:${{ matrix.php }}"
+          push: false
+          tags: "ghcr.io/nayleen/php:${{ matrix.php }}"
 
       - name: Test Local Images
         env:
-          REGISTRY: localhost:5000
+          PHP_VERSION: ${{ matrix.php }}
         run: |
           # assume each subfolder of ./tests is a test suite and run it
-          for test in $(find ./tests/* -type d); do
-            cd $test && ./run.sh
-            cd - > /dev/null
+          for test in ./tests/*/; do
+            (cd "$test" && ./run.sh)
           done
+
+  ci-result:
+    name: CI result
+    if: ${{ always() }}
+    needs:
+      - php-versions
+      - test
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Verify Required Jobs
+        env:
+          PHP_VERSIONS_RESULT: ${{ needs.php-versions.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          test "$PHP_VERSIONS_RESULT" = success
+          test "$TEST_RESULT" = success
 
   release:
     if: ${{ github.event_name == 'push' }}
-    needs: test
-    runs-on: ubuntu-latest
+    needs: ci-result
     permissions:
-      actions: write
-    steps:
-      - name: Build Release Images
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: build-all.yaml
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build.yaml

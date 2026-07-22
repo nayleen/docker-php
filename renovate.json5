@@ -1,0 +1,53 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  customManagers: [
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '/^php-images\\.json$/'
+      ],
+      matchStrings: [
+        'docker\\.io/library/(?<depName>php):(?<currentValue>\\d+\\.\\d+\\.\\d+-cli)@(?<currentDigest>sha256:[a-f0-9]{64})'
+      ],
+      versioningTemplate: 'docker'
+    }
+  ],
+  enabledManagers: [
+    'custom.regex',
+    'github-actions'
+  ],
+  packageRules: [
+    {
+      enabled: false,
+      matchManagers: [
+        'custom.regex'
+      ],
+      matchPackageNames: [
+        'php'
+      ],
+      matchUpdateTypes: [
+        'major',
+        'minor'
+      ]
+    },
+    {
+      automerge: true,
+      automergeStrategy: 'rebase',
+      automergeType: 'pr',
+      groupName: 'PHP base images',
+      groupSlug: 'php-base-images',
+      matchManagers: [
+        'custom.regex'
+      ],
+      matchPackageNames: [
+        'php'
+      ],
+      matchUpdateTypes: [
+        'digest',
+        'patch'
+      ],
+      platformAutomerge: false
+    }
+  ]
+}

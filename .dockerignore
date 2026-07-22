@@ -6,4 +6,7 @@ tools/
 .editorconfig
 compose.yaml
 Dockerfile
+php-images.json
 README.md
+renovate.json5
+Taskfile.dist.yaml

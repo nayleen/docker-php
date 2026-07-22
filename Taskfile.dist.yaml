@@ -1,0 +1,56 @@
+version: '3'
+
+set:
+  - errexit
+  - nounset
+  - pipefail
+
+silent: true
+
+tasks:
+  ci:
+    desc: Build and test every supported PHP image
+    vars:
+      PHP_VERSIONS:
+        sh: jq --exit-status --raw-output 'keys | select(length > 0)[]' php-images.json
+    cmds:
+      - for:
+          var: PHP_VERSIONS
+        task: test
+        vars:
+          PHP_VERSION: '{{.ITEM}}'
+
+  build:
+    desc: Build the selected PHP image
+    requires:
+      vars:
+        - PHP_VERSION
+    vars:
+      PHP_IMAGE:
+        sh: './tools/resolve-php-image.sh {{.PHP_VERSION | shellQuote}}'
+    cmds:
+      - |
+        PHP_VERSION={{.PHP_VERSION | shellQuote}} docker compose build \
+          --build-arg PHP_IMAGE={{.PHP_IMAGE | shellQuote}} \
+          php
+
+  test:
+    desc: Build and test the selected PHP image
+    aliases:
+      - tests
+    requires:
+      vars:
+        - PHP_VERSION
+    deps:
+      - task: build
+        vars:
+          PHP_VERSION: '{{.PHP_VERSION}}'
+    cmds:
+      - |
+        printf 'Testing PHP %s\n' {{.PHP_VERSION | shellQuote}}
+        for test in ./tests/*/; do
+          (
+            cd "$test"
+            PHP_VERSION={{.PHP_VERSION | shellQuote}} ./run.sh
+          )
+        done

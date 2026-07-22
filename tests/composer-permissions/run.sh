@@ -10,16 +10,7 @@ if [ "$(pwd)" != "$SCRIPT_REALPATH" ]; then
     exit 1
 fi
 
-if ! docker compose pull --quiet; then
-    echo "Docker image pull failed :("
-    exit 1
-fi
-
-TEST_DIR=$(mktemp -d)
-COMPOSER_CACHE_DIR="$TEST_DIR/composer"
-trap 'rm -rf "$TEST_DIR"' EXIT
-
-if ! COMPOSER_CACHE_DIR="$COMPOSER_CACHE_DIR" docker compose run --rm composer; then
+if ! docker compose --progress none run --rm composer; then
     echo "Composer install failed :("
     exit 1
 fi

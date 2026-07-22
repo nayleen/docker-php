@@ -1,6 +1,7 @@
-ARG PHP_VERSION="8.5"
+# check=skip=InvalidDefaultArgInFrom
+ARG PHP_IMAGE
 
-FROM php:${PHP_VERSION}-cli
+FROM ${PHP_IMAGE}
 
 ARG PHP_EXTENSIONS="@composer bcmath curl ffi igbinary intl msgpack opcache pcntl shmop sockets sysvmsg uuid uv xdebug zip zstd"
 ARG SYSTEM_PACKAGES="ca-certificates curl lsb-release nghttp2 sudo unzip wget zip"

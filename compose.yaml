@@ -4,4 +4,4 @@ services:
     build:
       context: .
       args:
-        PHP_VERSION: ${PHP_VERSION:-8.5}
+        PHP_IMAGE:
