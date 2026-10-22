@@ -19,6 +19,15 @@
   ],
   packageRules: [
     {
+      matchManagers: [
+        'custom.regex'
+      ],
+      matchPackageNames: [
+        'php'
+      ],
+      separateMinorPatch: true
+    },
+    {
       enabled: false,
       matchManagers: [
         'custom.regex'
