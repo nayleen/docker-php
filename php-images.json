@@ -1,5 +1,5 @@
 {
-  "8.3": "docker.io/library/php:8.3.36-cli@sha256:628102249d93494233b54490b785f12db9cd60f4dc89416dfca15973f2125f10",
-  "8.4": "docker.io/library/php:8.4.27-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55",
-  "8.5": "docker.io/library/php:8.5.12-cli@sha256:50956f094e90a716d43bea28087d447555ad80510e386ab8c9c10d8c70d781a9"
+  "8.3": "docker.io/library/php:8.3.37-cli@sha256:5f1bdca690441d976239c9741583c44488930439ae9799f0383b8cf68947517b",
+  "8.4": "docker.io/library/php:8.4.28-cli@sha256:1afd622efcdd7623feca3562344097fb60c8078926e9961679f0c54657fac603",
+  "8.5": "docker.io/library/php:8.5.13-cli@sha256:994d78db9de7808cfe1a077e4f266b333570393918832dcd7427c71c7c618e56"
 }
